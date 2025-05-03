@@ -2,7 +2,8 @@ package integration
 
 // Basic imports
 import (
-	asyncsuite "async_suite/test/integration/async_suite"
+	asynctest "async_suite/test/integration/async_test"
+	"errors"
 	"testing"
 	"time"
 
@@ -11,36 +12,49 @@ import (
 
 type ExampleAsyncSuite struct {
 	suite.Suite
-	async *asyncsuite.AsyncSuite
 }
 
 func (s *ExampleAsyncSuite) SetupSuite() {
-	s.async.SetT(s.T())
 }
 
 func (s *ExampleAsyncSuite) TearDownSuite() {
 }
 
 func TestAsyncSuite(t *testing.T) {
-	suite.Run(t, &ExampleAsyncSuite{async: &asyncsuite.AsyncSuite{}})
+	suite.Run(t, &ExampleAsyncSuite{})
 }
 
-func (s *ExampleAsyncSuite) TestExample() {
-	s.async.InitTest(10 * time.Second)
-	defer s.async.DoneTest()
+func (s *ExampleAsyncSuite) TestExample1() {
+	async := asynctest.NewTest(&s.Suite, 10*time.Second)
+	defer async.Done()
 
 	start := func() {
 		go func() {
 			time.Sleep(100 * time.Millisecond)
-			s.async.Equal(99, 100)
-			// s.async.Fail(errors.New("test error"))
-			s.async.Success()
+			async.Fail(errors.New("test error"))
 		}()
 	}
 
 	start()
-	s.async.Wait()
+	async.Wait()
 
-	s.Require().NoError(s.async.WaitErr())
-	s.Require().NoError(s.async.TestErr())
+	s.Require().NoError(async.Err())
+}
+
+func (s *ExampleAsyncSuite) TestExample2() {
+	async := asynctest.NewTest(&s.Suite, 10*time.Second)
+	defer async.Done()
+
+	start := func() {
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			async.Equal(99, 100)
+			async.Success()
+		}()
+	}
+
+	start()
+	async.Wait()
+
+	s.Require().NoError(async.Err())
 }
