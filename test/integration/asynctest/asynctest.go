@@ -38,6 +38,12 @@ func (t *AsyncTest) Wait() {
 	<-t.ctx.Done()
 }
 
+func (t *AsyncTest) Assert(b bool) {
+	if !b {
+		t.cancel(nil)
+	}
+}
+
 func (t *AsyncTest) waitErr() error {
 	err := t.ctx.Err()
 	if errors.Is(err, context.Canceled) {

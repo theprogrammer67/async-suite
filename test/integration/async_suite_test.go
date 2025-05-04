@@ -77,6 +77,23 @@ func (s *ExampleAsyncSuite) TestExample3() {
 	async.Wait()
 }
 
+// Assert
+func (s *ExampleAsyncSuite) TestExample5() {
+	async := asynctest.NewTest(&s.Suite, 10*time.Second)
+	defer async.Done()
+
+	start := func() {
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			async.Assert(s.Equal(1, 2))
+			async.Success()
+		}()
+	}
+
+	start()
+	async.Wait()
+}
+
 // context deadline exceeded error
 func (s *ExampleAsyncSuite) TestExample4() {
 	async := asynctest.NewTest(&s.Suite, 1*time.Second)
