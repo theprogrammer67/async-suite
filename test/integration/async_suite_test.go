@@ -2,7 +2,7 @@ package integration
 
 // Basic imports
 import (
-	asynctest "async_suite/test/integration/async_test"
+	"async_suite/test/integration/asynctest"
 	"errors"
 	"testing"
 	"time"
@@ -24,6 +24,7 @@ func TestAsyncSuite(t *testing.T) {
 	suite.Run(t, &ExampleAsyncSuite{})
 }
 
+// custom error in test
 func (s *ExampleAsyncSuite) TestExample1() {
 	async := asynctest.NewTest(&s.Suite, 10*time.Second)
 	defer async.Done()
@@ -31,7 +32,7 @@ func (s *ExampleAsyncSuite) TestExample1() {
 	start := func() {
 		go func() {
 			time.Sleep(100 * time.Millisecond)
-			async.Fail(errors.New("test error"))
+			async.Fail("custom error")
 		}()
 	}
 
@@ -41,7 +42,26 @@ func (s *ExampleAsyncSuite) TestExample1() {
 	s.Require().NoError(async.Err())
 }
 
+// NoError
 func (s *ExampleAsyncSuite) TestExample2() {
+	async := asynctest.NewTest(&s.Suite, 10*time.Second)
+	defer async.Done()
+
+	start := func() {
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			err := errors.New("test error")
+			async.NoError(err)
+			async.Success()
+		}()
+	}
+
+	start()
+	async.Wait()
+}
+
+// Equal
+func (s *ExampleAsyncSuite) TestExample3() {
 	async := asynctest.NewTest(&s.Suite, 10*time.Second)
 	defer async.Done()
 
@@ -50,6 +70,21 @@ func (s *ExampleAsyncSuite) TestExample2() {
 			time.Sleep(100 * time.Millisecond)
 			async.Equal(99, 100)
 			async.Success()
+		}()
+	}
+
+	start()
+	async.Wait()
+}
+
+// context deadline exceeded error
+func (s *ExampleAsyncSuite) TestExample4() {
+	async := asynctest.NewTest(&s.Suite, 1*time.Second)
+	defer async.Done()
+
+	start := func() {
+		go func() {
+			time.Sleep(100 * time.Millisecond)
 		}()
 	}
 

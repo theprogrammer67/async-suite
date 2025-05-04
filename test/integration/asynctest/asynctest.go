@@ -8,11 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// type AsyncSuite struct {
-// 	suite.Suite
-// 	test *asyncTest
-// }
-
 type AsyncTest struct {
 	suite  *suite.Suite
 	ctx    context.Context
@@ -20,27 +15,23 @@ type AsyncTest struct {
 }
 
 func NewTest(suite *suite.Suite, timeout time.Duration) *AsyncTest {
-	res := &AsyncTest{suite: suite}
+	t := &AsyncTest{suite: suite}
 	ctxTimeout, _ := context.WithTimeout(context.TODO(), timeout)
-	res.ctx, res.cancel = context.WithCancelCause(ctxTimeout)
+	t.ctx, t.cancel = context.WithCancelCause(ctxTimeout)
 
-	return res
+	return t
 }
-
-// func (s *AsyncSuite) InitTest(timeout time.Duration) {
-// 	s.test = newTest(timeout)
-// }
 
 func (t *AsyncTest) Done() {
 	t.cancel(nil)
 }
 
 func (t *AsyncTest) Success() {
-	t.Fail(nil)
+	t.cancel(nil)
 }
 
-func (t *AsyncTest) Fail(err error) {
-	t.cancel(err)
+func (t *AsyncTest) Fail(message string) {
+	t.cancel(errors.New(message))
 }
 
 func (t *AsyncTest) Wait() {
